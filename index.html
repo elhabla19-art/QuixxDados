@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quixx Scorepad Multi</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+
+    <!-- LOBBY PRINCIPAL -->
+    <div id="lobbyModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Quixx</h2>
+            <p>Selecciona un modo de juego</p>
+            <div class="input-group">
+                <label>Tu Nombre:</label>
+                <input type="text" id="playerName" placeholder="Ej. Leo" maxlength="10">
+            </div>
+            <div class="modal-buttons">
+                <div class="row-btns">
+                    <button class="modal-btn btn-primary" onclick="createRoom()">Crear Sala</button>
+                    <button class="modal-btn btn-secondary" onclick="showJoinModal()">Unirse</button>
+                </div>
+                <button class="modal-btn btn-outline" onclick="playSolo()" style="margin-top: 10px;">Jugar Solo (Local)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UNIRSE A SALA -->
+    <div id="joinModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Unirse a Sala</h2>
+            <p>Pide el código al creador de la sala</p>
+            <div class="input-group">
+                <label>Código de la Sala (4 letras/números):</label>
+                <input type="text" id="roomCodeInput" placeholder="ABCD" maxlength="4" style="text-transform: uppercase;">
+            </div>
+            <div class="modal-buttons row-btns">
+                <button class="modal-btn btn-outline" onclick="backToLobby()">Volver</button>
+                <button class="modal-btn btn-secondary" onclick="joinRoom()">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARGANDO -->
+    <div id="loadingModal" class="modal-overlay">
+        <div class="modal-box" style="background: transparent; border: none; box-shadow: none;">
+            <h2 id="loadingText">Conectando...</h2>
+        </div>
+    </div>
+
+    <!-- REINICIAR -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>¿Reiniciar tablero?</h3>
+            <p>Se borrarán tus marcas actuales.</p>
+            <div class="modal-buttons row-btns">
+                <button class="modal-btn btn-outline" onclick="closeModal()">Cancelar</button>
+                <button class="modal-btn btn-danger" onclick="confirmReset()">Reiniciar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI DEL JUEGO -->
+    <header>
+        <h1>Quixx</h1>
+        <div id="roomInfoDisplay" class="room-info" style="display: none;"></div>
+    </header>
+
+    <div class="app-container">
+        <div class="board-container">
+            <div class="board" id="game-board"></div>
+        </div>
+
+        <div class="side-panel">
+            <div class="scoreboard">
+                <div class="scores-grid">
+                    <div class="score-item red"><span class="color-dot"></span><span id="score-red">0</span></div>
+                    <div class="score-item yellow"><span class="color-dot"></span><span id="score-yellow">0</span></div>
+                    <div class="score-item green"><span class="color-dot"></span><span id="score-green">0</span></div>
+                    <div class="score-item blue"><span class="color-dot"></span><span id="score-blue">0</span></div>
+                </div>
+                
+                <div class="penalties-section">
+                    <span class="penalty-label">Fallas:</span>
+                    <div id="penalty-0" class="penalty-box" onclick="handlePenaltyClick(0)"></div>
+                    <div id="penalty-1" class="penalty-box" onclick="handlePenaltyClick(1)"></div>
+                    <div id="penalty-2" class="penalty-box" onclick="handlePenaltyClick(2)"></div>
+                    <div id="penalty-3" class="penalty-box" onclick="handlePenaltyClick(3)"></div>
+                </div>
+
+                <div class="total-score">
+                    TOTAL: <span id="score-total">0</span>
+                </div>
+                
+                <div class="controls">
+                    <button class="modal-btn btn-danger" onclick="showModal()">Reiniciar Mi Tablero</button>
+                </div>
+            </div>
+
+            <!-- Tabla de posiciones con mini tableros completos -->
+            <div class="leaderboard" id="leaderboardPanel">
+                <h3>Posiciones y Tableros</h3>
+                <div id="playersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
