@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quixx Scorepad Multi</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
@@ -12,7 +17,7 @@
     <!-- LOBBY PRINCIPAL -->
     <div id="lobbyModal" class="modal-overlay">
         <div class="modal-box">
-            <h2>Quixx</h2>
+            <h2>🎲 Quixx</h2>
             <p>Selecciona un modo de juego</p>
             <div class="input-group">
                 <label>Tu Nombre:</label>
@@ -65,7 +70,7 @@
 
     <!-- UI DEL JUEGO -->
     <header>
-        <h1>Quixx</h1>
+        <h1>🎲 Quixx</h1>
         <div id="roomInfoDisplay" class="room-info" style="display: none;"></div>
     </header>
 
@@ -84,7 +89,7 @@
                 </div>
                 
                 <div class="penalties-section">
-                    <span class="penalty-label">Fallas:</span>
+                    <span class="penalty-label">❌ Fallas:</span>
                     <div id="penalty-0" class="penalty-box" onclick="handlePenaltyClick(0)"></div>
                     <div id="penalty-1" class="penalty-box" onclick="handlePenaltyClick(1)"></div>
                     <div id="penalty-2" class="penalty-box" onclick="handlePenaltyClick(2)"></div>
@@ -96,13 +101,13 @@
                 </div>
                 
                 <div class="controls">
-                    <button class="modal-btn btn-danger" onclick="showModal()">Reiniciar Mi Tablero</button>
+                    <button class="modal-btn btn-danger" onclick="showModal()">🔄 Reiniciar Mi Tablero</button>
                 </div>
             </div>
 
             <!-- Tabla de posiciones con mini tableros completos -->
             <div class="leaderboard" id="leaderboardPanel">
-                <h3>Posiciones y Tableros</h3>
+                <h3>🏆 Posiciones y Tableros</h3>
                 <div id="playersList"></div>
             </div>
         </div>

@@ -168,6 +168,11 @@ h1 { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: upp
 .mini-pbox.marked::after { content: "X"; }
 .mini-pbox.marked { background: var(--bg-box-marked); }
 
+/* Estilos para el favicon en la pestaña */
+@media (prefers-color-scheme: dark) {
+    /* El favicon se adapta automáticamente */
+}
+
 @media (orientation: landscape) and (max-height: 600px) {
     body { padding: 6px; justify-content: center; }
     header { display: none; } 
