@@ -1,3 +1,8 @@
+// ===== CONFIGURACION =====
+const urlParams = new URLSearchParams(window.location.search);
+const isAutoMode = urlParams.get('auto') === '1';
+const AUTO_ROOM_CODE = 'GRIL';
+
 const pointSystem = [0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78];
 const rowsConfig = [
     { id: 'red', numbers: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
@@ -9,11 +14,6 @@ const rowsConfig = [
 let moveHistory = [];
 let myTotalScore = 0;
 
-// ===== MODO AUTOMATICO =====
-const urlParams = new URLSearchParams(window.location.search);
-const isAutoMode = urlParams.get('auto') === '1';
-const AUTO_ROOM_CODE = 'GRIL';
-
 // ===== SISTEMA MULTIJUGADOR MQTT =====
 let mqttClient = null;
 let myId = Math.random().toString(36).substr(2, 9);
@@ -21,6 +21,7 @@ let currentRoom = null;
 let playersData = {};
 let myName = "Jugador";
 
+// ===== RENDERIZADO DEL TABLERO =====
 function renderBoard() {
     const boardElement = document.getElementById('game-board');
     boardElement.innerHTML = '';
@@ -42,6 +43,7 @@ function renderBoard() {
     updateVisuals();
 }
 
+// ===== MANEJO DE CLICKS =====
 function handleBoxClick(color, index) {
     const moveId = `${color}-${index}`;
     const posInHistory = moveHistory.indexOf(moveId);
@@ -75,6 +77,7 @@ function handlePenaltyClick(index) {
     }
 }
 
+// ===== ACTUALIZACION VISUAL =====
 function updateVisuals() {
     document.querySelectorAll('.box, .penalty-box').forEach(el => el.classList.remove('marked', 'disabled', 'last-marked'));
     ['red', 'yellow', 'green', 'blue'].forEach(color => {
@@ -104,6 +107,7 @@ function updateVisuals() {
     }
 }
 
+// ===== CALCULO DE PUNTAJES =====
 function calculateScores() {
     let totalScore = 0;
 
@@ -131,11 +135,13 @@ function calculateScores() {
     }
 }
 
+// ===== OBTENER NOMBRE =====
 function getPlayerName() {
     let name = document.getElementById('playerName').value.trim();
     return name || "Jugador " + Math.floor(Math.random() * 100);
 }
 
+// ===== FUNCIONES DEL LOBBY =====
 function playSolo() {
     document.getElementById('lobbyModal').style.display = 'none';
 }
@@ -143,6 +149,26 @@ function playSolo() {
 function showJoinModal() {
     document.getElementById('lobbyModal').style.display = 'none';
     document.getElementById('joinModal').style.display = 'flex';
+    
+    // Si estamos en modo automatico, precargar el codigo
+    if (isAutoMode) {
+        const roomInput = document.getElementById('roomCodeInput');
+        if (roomInput) {
+            roomInput.value = AUTO_ROOM_CODE;
+            roomInput.readOnly = true;
+            roomInput.style.opacity = '0.7';
+            roomInput.style.color = '#4CAF50';
+        }
+    } else {
+        // Modo normal: asegurar que el campo esta vacio y editable
+        const roomInput = document.getElementById('roomCodeInput');
+        if (roomInput) {
+            roomInput.value = '';
+            roomInput.readOnly = false;
+            roomInput.style.opacity = '1';
+            roomInput.style.color = 'white';
+        }
+    }
 }
 
 function backToLobby() {
@@ -150,6 +176,7 @@ function backToLobby() {
     document.getElementById('lobbyModal').style.display = 'flex';
 }
 
+// ===== CREAR Y UNIRSE A SALA =====
 function createRoom() {
     myName = getPlayerName();
     const code = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -158,13 +185,23 @@ function createRoom() {
 
 function joinRoom() {
     myName = getPlayerName();
-    const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-    if (code.length !== 4) return alert("El código debe tener 4 letras/números.");
+    let code;
+    
+    if (isAutoMode) {
+        code = AUTO_ROOM_CODE;
+    } else {
+        code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+        if (code.length !== 4) {
+            alert("El código debe tener 4 letras/números.");
+            return;
+        }
+    }
+    
     connectToRoom(code);
 }
 
-function connectToRoom(code, name) {
-    if (name) myName = name;
+// ===== CONEXION MQTT =====
+function connectToRoom(code) {
     showLoading("Conectando con la sala...");
     
     mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
@@ -204,6 +241,7 @@ function connectToRoom(code, name) {
     });
 }
 
+// ===== BROADCAST =====
 function broadcastScore(action = 'sync') {
     if (mqttClient && currentRoom) {
         const topic = `quixx_app_xyz/room/${currentRoom}`;
@@ -218,6 +256,7 @@ function broadcastScore(action = 'sync') {
     }
 }
 
+// ===== EXITO AL UNIRSE =====
 function joinSuccess(code) {
     hideLoading();
     document.getElementById('lobbyModal').style.display = 'none';
@@ -231,6 +270,7 @@ function joinSuccess(code) {
     renderLeaderboard();
 }
 
+// ===== LEADERBOARD =====
 function renderLeaderboard() {
     const list = document.getElementById('playersList');
     list.innerHTML = '';
@@ -247,6 +287,7 @@ function renderLeaderboard() {
         
         const pMoves = p.moves || [];
 
+        // Generar HTML para las 4 filas del mini tablero
         let boardHtml = '<div class="mini-board">';
         rowsConfig.forEach(rc => {
             boardHtml += `<div class="mini-row ${rc.id}">`;
@@ -260,6 +301,7 @@ function renderLeaderboard() {
         });
         boardHtml += '</div>';
 
+        // Generar HTML para las fallas en miniatura
         let penaltiesHtml = '<div class="mini-penalties"><span style="font-size:10px; color:var(--text-muted); margin-right:4px;">Fallas:</span>';
         for (let i = 0; i < 4; i++) {
             const isPenMarked = pMoves.includes(`penalty-${i}`);
@@ -280,47 +322,6 @@ function renderLeaderboard() {
     });
 }
 
-// ===== MODAL DE LOBBY MODIFICADO =====
-function initLobby() {
-    const lobbyModal = document.getElementById('lobbyModal');
-    if (!lobbyModal) return;
-    
-    if (isAutoMode) {
-        const buttons = lobbyModal.querySelectorAll('.modal-btn');
-        buttons.forEach(btn => {
-            if (btn.textContent.includes('Crear') || btn.textContent.includes('Unirse')) {
-                btn.disabled = true;
-                btn.style.opacity = '0.4';
-                btn.style.cursor = 'not-allowed';
-            }
-        });
-        
-        const modalButtons = lobbyModal.querySelector('.modal-buttons');
-        if (modalButtons && !document.getElementById('readyBtn')) {
-            const readyBtn = document.createElement('button');
-            readyBtn.id = 'readyBtn';
-            readyBtn.className = 'modal-btn btn-primary';
-            readyBtn.textContent = 'Listo';
-            readyBtn.addEventListener('click', function() {
-                const name = document.getElementById('playerName').value.trim() || 'Jugador';
-                connectToRoom(AUTO_ROOM_CODE, name);
-            });
-            modalButtons.appendChild(readyBtn);
-        }
-        
-        const modalBox = lobbyModal.querySelector('.modal-box');
-        if (modalBox && !document.getElementById('autoInfo')) {
-            const info = document.createElement('p');
-            info.id = 'autoInfo';
-            info.style.cssText = 'color: #4CAF50; font-size: 0.8rem; margin-top: 8px;';
-            info.textContent = 'Sala: ' + AUTO_ROOM_CODE;
-            modalBox.appendChild(info);
-        }
-    }
-    
-    lobbyModal.style.display = 'flex';
-}
-
 // ===== UTILIDADES =====
 function showModal() { document.getElementById('confirmModal').style.display = 'flex'; }
 function closeModal() { document.getElementById('confirmModal').style.display = 'none'; }
@@ -339,8 +340,29 @@ function hideLoading() {
 // ===== INICIALIZACION =====
 document.addEventListener('DOMContentLoaded', function() {
     renderBoard();
+    
+    // Si estamos en modo automatico, mostrar indicador en el lobby
     if (isAutoMode) {
-        document.getElementById('joinModal').style.display = 'none';
-        initLobby();
+        const lobbyText = document.querySelector('#lobbyModal .modal-box p');
+        if (lobbyText) {
+            const indicator = document.createElement('span');
+            indicator.style.color = '#4CAF50';
+            indicator.style.fontSize = '0.8rem';
+            indicator.style.display = 'block';
+            indicator.style.marginTop = '5px';
+            indicator.textContent = '🔗 Modo automatico: sala ' + AUTO_ROOM_CODE;
+            lobbyText.parentNode.insertBefore(indicator, lobbyText.nextSibling);
+        }
     }
 });
+
+// ===== EXPORTAR FUNCIONES GLOBALES =====
+window.createRoom = createRoom;
+window.joinRoom = joinRoom;
+window.showJoinModal = showJoinModal;
+window.backToLobby = backToLobby;
+window.playSolo = playSolo;
+window.showModal = showModal;
+window.closeModal = closeModal;
+window.confirmReset = confirmReset;
+window.handlePenaltyClick = handlePenaltyClick;
