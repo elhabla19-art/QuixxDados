@@ -35,7 +35,7 @@ function renderBoard() {
             rowDiv.appendChild(box);
         });
         const lockBox = document.createElement('div');
-        lockBox.className = 'box lock'; lockBox.textContent = '🔒';
+        lockBox.className = 'box lock'; lockBox.textContent = 'C';
         lockBox.addEventListener('click', () => handleBoxClick(rowConfig.id, 11));
         rowDiv.appendChild(lockBox);
         boardElement.appendChild(rowDiv);
@@ -192,7 +192,7 @@ function joinRoom() {
     } else {
         code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
         if (code.length !== 4) {
-            alert("El código debe tener 4 letras/números.");
+            alert("El codigo debe tener 4 letras/numeros.");
             return;
         }
     }
@@ -232,7 +232,7 @@ function connectToRoom(code) {
             if (data.action === 'join') {
                 broadcastScore('sync');
             }
-        } catch(e) { console.error("Mensaje inválido", e); }
+        } catch(e) { console.error("Mensaje invalido", e); }
     });
 
     mqttClient.on('error', (err) => {
@@ -296,7 +296,7 @@ function renderLeaderboard() {
                 boardHtml += `<div class="mini-cell ${isMarked ? 'marked' : ''}">${num}</div>`;
             });
             const isLockMarked = pMoves.includes(`${rc.id}-11`);
-            boardHtml += `<div class="mini-cell lock ${isLockMarked ? 'marked' : ''}">🔒</div>`;
+            boardHtml += `<div class="mini-cell lock ${isLockMarked ? 'marked' : ''}">C</div>`;
             boardHtml += `</div>`;
         });
         boardHtml += '</div>';
@@ -311,7 +311,7 @@ function renderLeaderboard() {
 
         card.innerHTML = `
             <div class="player-card-header">
-                <span>${p.name}${isMe ? ' (Tú)' : ''}</span>
+                <span>${p.name}${isMe ? ' (Tu)' : ''}</span>
                 <span>${p.score} pts</span>
             </div>
             ${boardHtml}
@@ -340,20 +340,7 @@ function hideLoading() {
 // ===== INICIALIZACION =====
 document.addEventListener('DOMContentLoaded', function() {
     renderBoard();
-    
-    // Si estamos en modo automatico, mostrar indicador en el lobby
-    if (isAutoMode) {
-        const lobbyText = document.querySelector('#lobbyModal .modal-box p');
-        if (lobbyText) {
-            const indicator = document.createElement('span');
-            indicator.style.color = '#4CAF50';
-            indicator.style.fontSize = '0.8rem';
-            indicator.style.display = 'block';
-            indicator.style.marginTop = '5px';
-            indicator.textContent = '🔗 Modo automatico: sala ' + AUTO_ROOM_CODE;
-            lobbyText.parentNode.insertBefore(indicator, lobbyText.nextSibling);
-        }
-    }
+    // No se muestra ningun indicador de modo automatico
 });
 
 // ===== EXPORTAR FUNCIONES GLOBALES =====
