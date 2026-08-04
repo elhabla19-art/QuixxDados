@@ -9,7 +9,12 @@ const rowsConfig = [
 let moveHistory = [];
 let myTotalScore = 0;
 
-// --- SISTEMA MULTIJUGADOR MQTT ---
+// ===== MODO AUTOMATICO =====
+const urlParams = new URLSearchParams(window.location.search);
+const isAutoMode = urlParams.get('auto') === '1';
+const AUTO_ROOM_CODE = 'GRIL';
+
+// ===== SISTEMA MULTIJUGADOR MQTT =====
 let mqttClient = null;
 let myId = Math.random().toString(36).substr(2, 9);
 let currentRoom = null;
@@ -158,7 +163,8 @@ function joinRoom() {
     connectToRoom(code);
 }
 
-function connectToRoom(code) {
+function connectToRoom(code, name) {
+    if (name) myName = name;
     showLoading("Conectando con la sala...");
     
     mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
@@ -241,7 +247,6 @@ function renderLeaderboard() {
         
         const pMoves = p.moves || [];
 
-        // Generar HTML para las 4 filas del mini tablero
         let boardHtml = '<div class="mini-board">';
         rowsConfig.forEach(rc => {
             boardHtml += `<div class="mini-row ${rc.id}">`;
@@ -255,7 +260,6 @@ function renderLeaderboard() {
         });
         boardHtml += '</div>';
 
-        // Generar HTML para las fallas en miniatura
         let penaltiesHtml = '<div class="mini-penalties"><span style="font-size:10px; color:var(--text-muted); margin-right:4px;">Fallas:</span>';
         for (let i = 0; i < 4; i++) {
             const isPenMarked = pMoves.includes(`penalty-${i}`);
@@ -276,7 +280,48 @@ function renderLeaderboard() {
     });
 }
 
-// --- UTILIDADES ---
+// ===== MODAL DE LOBBY MODIFICADO =====
+function initLobby() {
+    const lobbyModal = document.getElementById('lobbyModal');
+    if (!lobbyModal) return;
+    
+    if (isAutoMode) {
+        const buttons = lobbyModal.querySelectorAll('.modal-btn');
+        buttons.forEach(btn => {
+            if (btn.textContent.includes('Crear') || btn.textContent.includes('Unirse')) {
+                btn.disabled = true;
+                btn.style.opacity = '0.4';
+                btn.style.cursor = 'not-allowed';
+            }
+        });
+        
+        const modalButtons = lobbyModal.querySelector('.modal-buttons');
+        if (modalButtons && !document.getElementById('readyBtn')) {
+            const readyBtn = document.createElement('button');
+            readyBtn.id = 'readyBtn';
+            readyBtn.className = 'modal-btn btn-primary';
+            readyBtn.textContent = 'Listo';
+            readyBtn.addEventListener('click', function() {
+                const name = document.getElementById('playerName').value.trim() || 'Jugador';
+                connectToRoom(AUTO_ROOM_CODE, name);
+            });
+            modalButtons.appendChild(readyBtn);
+        }
+        
+        const modalBox = lobbyModal.querySelector('.modal-box');
+        if (modalBox && !document.getElementById('autoInfo')) {
+            const info = document.createElement('p');
+            info.id = 'autoInfo';
+            info.style.cssText = 'color: #4CAF50; font-size: 0.8rem; margin-top: 8px;';
+            info.textContent = 'Sala: ' + AUTO_ROOM_CODE;
+            modalBox.appendChild(info);
+        }
+    }
+    
+    lobbyModal.style.display = 'flex';
+}
+
+// ===== UTILIDADES =====
 function showModal() { document.getElementById('confirmModal').style.display = 'flex'; }
 function closeModal() { document.getElementById('confirmModal').style.display = 'none'; }
 function confirmReset() {
@@ -291,4 +336,11 @@ function hideLoading() {
     document.getElementById('loadingModal').style.display = 'none';
 }
 
-document.addEventListener('DOMContentLoaded', renderBoard);
+// ===== INICIALIZACION =====
+document.addEventListener('DOMContentLoaded', function() {
+    renderBoard();
+    if (isAutoMode) {
+        document.getElementById('joinModal').style.display = 'none';
+        initLobby();
+    }
+});
